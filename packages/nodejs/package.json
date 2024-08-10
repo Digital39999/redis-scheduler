@@ -1,6 +1,6 @@
 {
 	"version": "1.0.0",
-	"name": "redis-scheduler",
+	"name": "redis-scheduler-js",
 	"author": "Digital39999",
 	"scripts": {
 		"lint": "eslint src --fix --ext .ts",

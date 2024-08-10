@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 env:
-  npm_package_name: ${{ github.repository }}
   publish: false
 
 jobs:
@@ -36,7 +35,8 @@ jobs:
         run: |
           cd packages/nodejs
           current_version=$(node -p "require('./package.json').version")
-          published_version=$(npm view ${npm_package_name} version) || echo "0.0.0"
+          npm_package_name=$(node -p "require('./package.json').name")
+          published_version=$(npm show $npm_package_name version) || echo "0.0.0"
 
           echo "Current version: $current_version"
           echo "Published version: $published_version"
