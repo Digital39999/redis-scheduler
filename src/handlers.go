@@ -21,13 +21,13 @@ type RequestData struct {
 func scheduleHandler(c *gin.Context) {
 	var reqData RequestData
 	if err := c.ShouldBindJSON(&reqData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "data": fmt.Sprintf("Invalid input: %v", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "error": fmt.Sprintf("Invalid input: %v", err.Error())})
 		return
 	}
 
 	uniqueKey, err := generateRandomKey()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to generate unique key."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to generate unique key."})
 		return
 	}
 
@@ -36,20 +36,20 @@ func scheduleHandler(c *gin.Context) {
 
 	value, err := json.Marshal(reqData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to marshal request data."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to marshal request data."})
 		return
 	}
 
 	err = rdb.Set(ctx, uniqueKey, value, 0).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": fmt.Sprintf("Failed to save data in Redis: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": fmt.Sprintf("Failed to save data in Redis: %v", err.Error())})
 		return
 	}
 
 	refKey := "rsch:ref-" + uniqueKey[len("rsch:unique:"):]
 	err = rdb.Set(ctx, refKey, "", time.Duration(reqData.TTL)*time.Second).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": fmt.Sprintf("Failed to save reference key in Redis: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": fmt.Sprintf("Failed to save reference key in Redis: %v", err.Error())})
 		return
 	}
 
@@ -64,17 +64,17 @@ func getScheduleHandler(c *gin.Context) {
 	data, err := rdb.Get(ctx, uniqueKey).Result()
 	if err != nil {
 		if err == redis.Nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "data": "Schedule not found."})
+			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "error": "Schedule not found."})
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to retrieve schedule."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to retrieve schedule."})
 		return
 	}
 
 	var reqData RequestData
 	if err := json.Unmarshal([]byte(data), &reqData); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to unmarshal schedule data."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to unmarshal schedule data."})
 		return
 	}
 
@@ -97,24 +97,24 @@ func patchScheduleHandler(c *gin.Context) {
 
 	var reqData RequestData
 	if err := c.ShouldBindJSON(&reqData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "data": fmt.Sprintf("Invalid input: %v", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "error": fmt.Sprintf("Invalid input: %v", err.Error())})
 		return
 	}
 
 	existingData, err := rdb.Get(ctx, uniqueKey).Result()
 	if err != nil {
 		if err == redis.Nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "data": "Schedule not found."})
+			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "error": "Schedule not found."})
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to retrieve schedule."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to retrieve schedule."})
 		return
 	}
 
 	var existingRequestData RequestData
 	if err := json.Unmarshal([]byte(existingData), &existingRequestData); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to unmarshal existing data."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to unmarshal existing data."})
 		return
 	}
 
@@ -132,20 +132,20 @@ func patchScheduleHandler(c *gin.Context) {
 
 	updatedValue, err := json.Marshal(existingRequestData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to marshal updated request data."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to marshal updated request data."})
 		return
 	}
 
 	err = rdb.Set(ctx, uniqueKey, updatedValue, 0).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": fmt.Sprintf("Failed to update data in Redis: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": fmt.Sprintf("Failed to update data in Redis: %v", err.Error())})
 		return
 	}
 
 	refKey := "rsch:ref-" + uniqueKey[len("rsch:unique:"):]
 	err = rdb.Expire(ctx, refKey, time.Duration(existingRequestData.TTL)*time.Second).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": fmt.Sprintf("Failed to update reference key TTL in Redis: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": fmt.Sprintf("Failed to update reference key TTL in Redis: %v", err.Error())})
 		return
 	}
 
@@ -155,7 +155,7 @@ func patchScheduleHandler(c *gin.Context) {
 func purgeHandler(c *gin.Context) {
 	err := rdb.FlushDB(ctx).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to purge Redis database."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to purge Redis database."})
 		return
 	}
 
@@ -169,16 +169,16 @@ func deleteScheduleHandler(c *gin.Context) {
 	_, err := rdb.Get(ctx, uniqueKey).Result()
 	if err != nil {
 		if err == redis.Nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "data": "Schedule not found."})
+			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "error": "Schedule not found."})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to retrieve schedule."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to retrieve schedule."})
 		return
 	}
 
 	err = rdb.Del(ctx, uniqueKey, "rsch:ref-"+key).Err()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": fmt.Sprintf("Failed to delete schedule from Redis: %v", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": fmt.Sprintf("Failed to delete schedule from Redis: %v", err.Error())})
 		return
 	}
 
@@ -188,7 +188,7 @@ func deleteScheduleHandler(c *gin.Context) {
 func schedulesHandler(c *gin.Context) {
 	keys, err := rdb.Keys(ctx, "rsch:ref-*").Result()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "data": "Failed to retrieve schedules."})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "error": "Failed to retrieve schedules."})
 		return
 	}
 
@@ -246,5 +246,5 @@ func infoHandler(c *gin.Context) {
 }
 
 func notFoundHandler(c *gin.Context) {
-	c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "data": "Route not found."})
+	c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "error": "Route not found."})
 }

@@ -61,13 +61,17 @@ Make sure to set the following environment variables before running the service:
 
 You can easily run Redis Scheduler using Docker. Follow these steps:
 
-### 1. Pull the Docker Image
+<details>
+<summary>1. Pull the Docker Image</summary>
 
 ```bash
 docker pull ghcr.io/digital39999/redis-scheduler:latest
 ```
 
-### 2. Run the Container
+</details>
+
+<details>
+<summary>2. Run the Container</summary>
 
 Run the container with the necessary environment variables:
 
@@ -82,15 +86,21 @@ docker run -d \
   ghcr.io/digital39999/redis-scheduler:latest
 ```
 
-### 3. Access the Service
+</details>
+
+<details>
+<summary>3. Access the Service</summary>
 
 The service will be available at `http://localhost:8080`.
+
+</details>
 
 ## Running with Docker Compose
 
 If you prefer to use Docker Compose, follow these steps:
 
-### 1. Create a `docker-compose.yml` File
+<details>
+<summary>1. Create a `docker-compose.yml` File</summary>
 
 Here’s an example `docker-compose.yml`:
 
@@ -117,7 +127,10 @@ services:
       - "6379:6379"
 ```
 
-### 2. Run the Services
+</details>
+
+<details>
+<summary>2. Run the Services</summary>
 
 To start the services, use the following command:
 
@@ -125,9 +138,14 @@ To start the services, use the following command:
 docker-compose up -d
 ```
 
-### 3. Access the Service
+</details>
+
+<details>
+<summary>3. Access the Service</summary>
 
 Once the services are up, you can access Redis Scheduler at `http://localhost:8080`.
+
+</details>
 
 ## API Usage
 
@@ -155,12 +173,54 @@ curl -X POST http://localhost:8080/schedule \
 - **`ttl`**: Time-to-live in seconds after which the webhook will be triggered.
 - **`data`**: Any JSON data you want to send to the webhook.
 
-### Get Active Tasks
+### Get All Active Tasks
 
 To retrieve a list of active tasks, send a GET request to `/schedules`:
 
 ```bash
 curl -X GET http://localhost:8080/schedules \
+-H "Authorization: your-api-auth-token"
+```
+
+### Get Task Details
+
+To get details of a specific task, send a GET request to `/schedule/:key`:
+
+```bash
+curl -X GET http://localhost:8080/schedule/:key \
+-H "Authorization: your-api-auth-token"
+```
+
+- Replace `:key` with the task key you want to retrieve.
+
+### Update a Task
+
+To update an existing scheduled task, send a PATCH request to `/schedule/:key`:
+
+```bash
+curl -X PATCH http://localhost:8080/schedule/:key \
+-H "Authorization: your-api-auth-token" \
+-H "Content-Type: application/json" \
+-d '{
+  "webhook": "https://example.com/new-webhook",
+  "ttl": 180,
+  "data": {
+    "message": "Updated message"
+  }
+}'
+```
+
+- **Fields that can be updated**:
+  - **`webhook`**: New URL to trigger.
+  - **`ttl`**: Updated time-to-live in seconds.
+  - **`data`**: New JSON data to send to the webhook.
+
+### Cancel a Task
+
+To cancel a scheduled task, send a DELETE request to `/schedule/:key`:
+
+```bash
+curl -X DELETE http://localhost:8080/schedule/:key \
 -H "Authorization: your-api-auth-token"
 ```
 
@@ -175,6 +235,15 @@ curl -X GET http://localhost:8080/stats \
 
 - This will return information such as the number of schedules running, total Redis keys, and microservices CPU and RAM usage.
 
+### Purge All Schedules
+
+To delete all scheduled tasks, send a POST request to `/purge`:
+
+```bash
+curl -X POST http://localhost:8080/purge \
+-H "Authorization: your-api-auth-token"
+```
+
 </details>
 
 <details>
@@ -185,29 +254,30 @@ curl -X GET http://localhost:8080/stats \
 Here’s how you could integrate Redis Scheduler into a Node.js project:
 
 ```javascript
-const axios = require('axios');
-
 const apiUrl = 'http://localhost:8080/schedule';
 const apiToken = 'your_api_auth_token';
 
 async function scheduleTask() {
   try {
-    const response = await axios.post(apiUrl, {
-      webhook: 'https://example.com/webhook',
-      ttl: 120, // 2 minutes
-      data: {
-        message: 'Hello from Node.js!'
-      }
-    }, {
+    const response = await fetch(apiUrl, {
+      method: 'POST',
       headers: {
         'Authorization': apiToken,
         'Content-Type': 'application/json'
-      }
-    });
+      },
+      body: JSON.stringify({
+        webhook: 'https://example.com/webhook',
+        ttl: 120, // 2 minutes
+        data: {
+          message: 'Hello from Node.js!'
+        }
+      })
+    }).then(res => res.json());
 
-    console.log('Task scheduled successfully:', response.data);
+    if (response.error) throw new Error(response.error);
+    console.log('Task scheduled successfully:', data);
   } catch (error) {
-    console.error('Error scheduling task:', error.response ? error.response.data : error.message);
+    console.error('Error scheduling task:', error.message);
   }
 }
 
@@ -232,7 +302,9 @@ def schedule_task():
     data = {
         'webhook': 'https://example.com/webhook',
         'ttl': 120,  # 2 minutes
-        'data': {
+        'data
+
+': {
             'message': 'Hello from Python!'
         }
     }
