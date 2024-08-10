@@ -131,6 +131,9 @@ Once the services are up, you can access Redis Scheduler at `http://localhost:80
 
 ## API Usage
 
+<details>
+<summary>Routes Overview</summary>
+
 ### Schedule a Task
 
 You can schedule a task by sending a POST request to `/schedule`. Here's an example using `curl`:
@@ -151,6 +154,31 @@ curl -X POST http://localhost:8080/schedule \
 - **`webhook`**: The URL to trigger when the TTL expires.
 - **`ttl`**: Time-to-live in seconds after which the webhook will be triggered.
 - **`data`**: Any JSON data you want to send to the webhook.
+
+### Get Active Tasks
+
+To retrieve a list of active tasks, send a GET request to `/schedules`:
+
+```bash
+curl -X GET http://localhost:8080/schedules \
+-H "Authorization: your-api-auth-token"
+```
+
+### Get System Statistics
+
+To retrieve system statistics, send a GET request to `/stats`:
+
+```bash
+curl -X GET http://localhost:8080/stats \
+-H "Authorization: your-api-auth-token"
+```
+
+- This will return information such as the number of schedules running, total Redis keys, and microservices CPU and RAM usage.
+
+</details>
+
+<details>
+<summary>Examples</summary>
 
 ### Example Node.js Client
 
@@ -186,9 +214,39 @@ async function scheduleTask() {
 scheduleTask();
 ```
 
-### Using the Scheduled Task
+### Example Python Client
 
-Once the task is scheduled, Redis Scheduler will attempt to post the provided data to the specified webhook after the TTL expires. If the webhook fails, it will retry based on the configured `RETRIES` and `RETRY_TIME` environment variables.
+Here’s how you could integrate Redis Scheduler into a Python project using `requests`:
+
+```python
+import requests
+
+api_url = 'http://localhost:8080/schedule'
+api_token = 'your_api_auth_token'
+
+def schedule_task():
+    headers = {
+        'Authorization': api_token,
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'webhook': 'https://example.com/webhook',
+        'ttl': 120,  # 2 minutes
+        'data': {
+            'message': 'Hello from Python!'
+        }
+    }
+    
+    response = requests.post(api_url, headers=headers, json=data)
+    if response.status_code == 200:
+        print('Task scheduled successfully:', response.json())
+    else:
+        print('Error scheduling task:', response.text)
+
+schedule_task()
+```
+
+</details>
 
 ## Contributing
 
