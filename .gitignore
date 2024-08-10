@@ -1,1 +1,6 @@
 .env
+
+# Nodejs
+/packages/nodejs/node_modules
+/packages/nodejs/pnpm-lock.yaml
+/packages/nodejs/dist

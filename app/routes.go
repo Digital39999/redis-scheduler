@@ -8,10 +8,11 @@ import (
 )
 
 func initializeRoutes(router *gin.Engine) {
-	router.GET("/schedules", schedulesHandler)
-	router.POST("/purge", purgeHandler)
-	router.GET("/stats", statsHandler)
 	router.GET("/", infoHandler)
+	router.GET("/stats", statsHandler)
+
+	router.GET("/schedules", schedulesHandler)
+	router.DELETE("/schedules", purgeHandler)
 
 	router.POST("/schedule", scheduleHandler)
 	router.GET("/schedule/:key", getScheduleHandler)

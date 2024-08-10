@@ -54,7 +54,7 @@ func scheduleHandler(c *gin.Context) {
 	}
 
 	fmt.Printf("Scheduled webhook for key %s, TTL: %d seconds.\n", refKey, reqData.TTL)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": fmt.Sprintf("Submission successful, key: %s", refKey)})
+	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": "Submission successful!", "key": refKey})
 }
 
 func getScheduleHandler(c *gin.Context) {
