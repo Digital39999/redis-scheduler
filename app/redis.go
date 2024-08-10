@@ -77,7 +77,7 @@ func handleExpiration(refKey string) {
 	maxRetries, _ := strconv.Atoi(os.Getenv("RETRIES"))
 	retryTime, _ := strconv.Atoi(os.Getenv("RETRY_TIME"))
 
-	if reqData.Retry >= maxRetries {
+	if maxRetries != -1 && reqData.Retry >= maxRetries {
 		message := fmt.Sprintf("Max retries reached for key %s, deleting unique key.", uniqueKey)
 		fmt.Println(message)
 
