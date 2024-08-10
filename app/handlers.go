@@ -18,6 +18,13 @@ type RequestData struct {
 	Data    interface{} `json:"data" binding:"required"`
 }
 
+type PartialRequestData struct {
+	Webhook string      `json:"webhook"`
+	Retry   int         `json:"retry"`
+	TTL     int         `json:"ttl"`
+	Data    interface{} `json:"data"`
+}
+
 func scheduleHandler(c *gin.Context) {
 	var reqData RequestData
 	if err := c.ShouldBindJSON(&reqData); err != nil {
@@ -95,7 +102,7 @@ func patchScheduleHandler(c *gin.Context) {
 	key := c.Param("key")
 	uniqueKey := "rsch:unique:" + key[len("rsch:ref-"):]
 
-	var reqData RequestData
+	var reqData PartialRequestData
 	if err := c.ShouldBindJSON(&reqData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "error": fmt.Sprintf("Invalid input: %v", err.Error())})
 		return

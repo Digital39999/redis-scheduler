@@ -35,6 +35,18 @@ By using Redis Scheduler, you gain:
 - **Simplicity**: A clean and easy-to-use API for scheduling tasks without the overhead of cron or interval-based systems.
 - **Flexibility**: Easily modify and manage tasks based on application needs.
 
+# Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Environment Variables](#environment-variables)
+- [Running with Docker](#running-with-docker)
+- [Running with Docker Compose](#running-with-docker-compose)
+- [API Usage](#api-usage)
+- [Packages](/packages/README.md)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - Schedule tasks with a TTL and webhook URL.

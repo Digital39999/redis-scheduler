@@ -73,7 +73,7 @@ export default class RedisScheduler extends EventEmitter {
 		};
 	}
 
-	public async schedule(data: Omit<RequestData, 'retry'>): Promise<string> {
+	public async schedule<T>(data: RequestData<T>): Promise<string> {
 		return (await this.parseAxiosRequest<{ key: string; }>(axios({
 			method: 'POST',
 			url: `${this.options.instanceUrl}/schedule`,
@@ -98,7 +98,7 @@ export default class RedisScheduler extends EventEmitter {
 		}));
 	}
 
-	public async updateSchedule(key: string, data: RequestData): Promise<boolean> {
+	public async updateSchedule<T>(key: string, data: Partial<RequestData<T>>): Promise<boolean> {
 		return !!(await this.parseAxiosRequest<string>(axios({
 			method: 'PATCH',
 			url: `${this.options.instanceUrl}/schedule/${key}`,
