@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 var ctx = context.Background()
@@ -15,10 +14,6 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 	gin.DefaultErrorWriter = io.Discard
-
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("Error loading .env file.")
-	}
 
 	redisURL, port, err := loadEnvVars()
 	if err != nil {

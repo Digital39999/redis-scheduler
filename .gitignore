@@ -1,4 +1,5 @@
 .env
+go.sum
 
 # Nodejs
 /packages/nodejs/node_modules
