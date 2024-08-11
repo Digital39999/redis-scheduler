@@ -13,7 +13,7 @@
 You can install `redis-scheduler` via npm:
 
 ```bash
-npm install redis-scheduler
+npm install redis-scheduler-js
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ npm install redis-scheduler
 You can create an instance of the `RedisScheduler` with an internal webhook server by specifying the port. 
 
 ```typescript
-import RedisScheduler from 'redis-scheduler';
+import RedisScheduler from 'redis-scheduler-js';
 
 const scheduler = new RedisScheduler({
     enableWebServerOnPort: 3000, // Port for the webhook server
@@ -34,11 +34,11 @@ const scheduler = new RedisScheduler({
 
 ### Setup with Express
 
-You can also use `redis-scheduler` with an existing Express application.
+You can also use `redis-scheduler-js` with an existing Express application.
 
 ```typescript
 import express from 'express';
-import RedisScheduler from 'redis-scheduler';
+import RedisScheduler from 'redis-scheduler-js';
 
 const app = express();
 const scheduler = new RedisScheduler({
