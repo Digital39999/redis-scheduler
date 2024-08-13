@@ -1,5 +1,5 @@
 {
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"name": "redis-scheduler-js",
 	"author": "Digital39999",
 	"scripts": {
@@ -7,7 +7,6 @@
 		"build": "tsc --build",
 		"watch": "tsc --watch"
 	},
-	"bin": "./dist/setup.js",
 	"repository": "https://github.com/Digital39999/redis-scheduler",
 	"main": "dist/index.js",
 	"type": "commonjs",
