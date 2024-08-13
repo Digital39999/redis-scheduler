@@ -2,7 +2,10 @@ module redis-scheduler
 
 go 1.22
 
-require github.com/gin-gonic/gin v1.10.0
+require (
+	github.com/gin-gonic/gin v1.10.0
+	github.com/joho/godotenv v1.5.1
+)
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

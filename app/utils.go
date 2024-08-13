@@ -10,12 +10,15 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/shirou/gopsutil/cpu"
 )
 
 var startTime = time.Now()
 
 func loadEnvVars() (string, string, error) {
+	_ = godotenv.Load()
+
 	redisURL := os.Getenv("REDIS_URL")
 	port := os.Getenv("PORT")
 
