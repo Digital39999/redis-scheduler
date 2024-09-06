@@ -1,4 +1,6 @@
 .eslintrc.json
 pnpm-lock.yaml
+tsconfig.json
 node_modules
 README.md
+src
