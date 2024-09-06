@@ -13,6 +13,7 @@ export default class RedisScheduler extends EventEmitter {
 
 	constructor ({
 		enableWebServerOnPort,
+		dontCheckInstanceUrl,
 		authorization,
 		instanceUrl,
 	}: ConstructorOptions) {
@@ -25,13 +26,13 @@ export default class RedisScheduler extends EventEmitter {
 		};
 
 		this.webhookEnabled = enableWebServerOnPort !== undefined;
-		this.checkInstanceUrl(instanceUrl);
+		if (!dontCheckInstanceUrl) this.checkInstanceUrl(instanceUrl);
 
 		if (this.webhookEnabled) {
 			this.webhookServer = new Hono();
 
-			this.webhookServer.post('/webhook', (c) => {
-				const body = c.req.json();
+			this.webhookServer.post('/webhook', async (c) => {
+				const body = await c.req.json();
 				this.onWebhook(body, c.req.header('Authorization') || '');
 
 				return c.json({ status: 200, message: 'Webhook received successfully.' }, 200);
@@ -51,17 +52,17 @@ export default class RedisScheduler extends EventEmitter {
 		if (!instanceUrl.hostname) throw new Error('Invalid instance URL.');
 
 		const response = await axios.get(url).then((res) => res.data).catch((err: AxiosError) => err.response?.data);
-		if (response.status !== 200) throw new Error('Invalid instance URL.');
+		if (response?.status !== 200) throw new Error('Invalid instance URL.');
 		else if ('error' in response) throw new Error(response.error);
-
-		return;
+		else throw new Error('Invalid instance URL.');
 	}
 
 	private async parseAxiosRequest<T>(response: Promise<AxiosResponse<ResponseType<T>>>): Promise<T> {
 		const data = await response.then((res) => res.data).catch((err: AxiosError<ResponseType<T>>) => err.response?.data);
 
-		if (!data || data.status !== 200) throw new Error('Request failed.');
+		if (!data) throw new Error('Request failed.');
 		else if ('error' in data) throw new Error(data.error);
+		else if (data.status !== 200) throw new Error('Request failed.');
 
 		return data.data;
 	}
@@ -73,13 +74,13 @@ export default class RedisScheduler extends EventEmitter {
 		};
 	}
 
-	public async schedule<T>(data: RequestData<T>): Promise<string> {
-		return (await this.parseAxiosRequest<{ key: string; }>(axios({
+	public async schedule<T>(data: RequestData<T>, type?: string): Promise<string> {
+		return await this.parseAxiosRequest<string>(axios({
 			method: 'POST',
-			url: `${this.options.instanceUrl}/schedule`,
+			url: `${this.options.instanceUrl}/schedule` + (type ? `?type=${type}` : ''),
 			headers: this.getHeaders(),
 			data,
-		}))).key;
+		}));
 	}
 
 	public async getSchedule<T>(key: string): Promise<ScheduleData<T>> {
@@ -90,10 +91,10 @@ export default class RedisScheduler extends EventEmitter {
 		}));
 	}
 
-	public async getAllSchedules<T>(): Promise<ScheduleData<T>[]> {
+	public async getAllSchedules<T>(type?: string): Promise<ScheduleData<T>[]> {
 		return await this.parseAxiosRequest<ScheduleData<T>[]>(axios({
 			method: 'GET',
-			url: `${this.options.instanceUrl}/schedules`,
+			url: `${this.options.instanceUrl}/schedules` + (type ? `?type=${type}` : ''),
 			headers: this.getHeaders(),
 		}));
 	}
@@ -160,17 +161,5 @@ export default class RedisScheduler extends EventEmitter {
 
 	public off<T>(event: 'data', listener: (data: T) => void) {
 		return super.off(event, listener);
-	}
-
-	public removeAllListeners(event?: string) {
-		return super.removeAllListeners(event);
-	}
-
-	public listeners(event: string) {
-		return super.listeners(event);
-	}
-
-	public listenerCount(event: string) {
-		return super.listenerCount(event);
 	}
 }

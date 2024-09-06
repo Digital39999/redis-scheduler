@@ -38,6 +38,7 @@ func main() {
 	}
 
 	go listenForExpirations(db)
+	go ensureReferences()
 
 	if err := router.Run(":" + port); err != nil {
 		fmt.Println("Failed to run server:", err)

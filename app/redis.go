@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -51,7 +52,7 @@ func listenForExpirations(db int) {
 			continue
 		}
 
-		if len(msg.Payload) < 8 || msg.Payload[:9] != "rsch:ref-" {
+		if len(msg.Payload) < 12 || !strings.HasPrefix(msg.Payload, "rsch-ref:") {
 			continue
 		}
 
@@ -59,18 +60,58 @@ func listenForExpirations(db int) {
 	}
 }
 
-func handleExpiration(refKey string) {
-	uniqueKey := "rsch:unique:" + refKey[len("rsch:ref-"):]
+func ensureReferences() {
+	mainKeysPattern := "rsch:*:*"
 
-	val, err := rdb.Get(ctx, uniqueKey).Result()
+	mainKeys, err := rdb.Keys(ctx, mainKeysPattern).Result()
 	if err != nil {
-		fmt.Println("Failed to get unique key data:", err)
+		fmt.Println("Failed to retrieve main keys:", err)
+		return
+	}
+
+	for _, mainKey := range mainKeys {
+		scheduleType := strings.Split(mainKey, ":")[1]
+		uniqueKey := strings.Split(mainKey, ":")[2]
+		refKey := fmt.Sprintf("rsch-ref:%s:%s", scheduleType, uniqueKey)
+
+		refExists, err := rdb.Exists(ctx, refKey).Result()
+		if err != nil {
+			fmt.Println("Failed to check if reference exists:", err)
+			continue
+		}
+
+		if refExists == 0 {
+			_, err := rdb.Set(ctx, refKey, "", 1*time.Second).Result()
+			if err != nil {
+				fmt.Printf("Failed to create missing reference for key %s: %v\n", refKey, err)
+			} else {
+				fmt.Printf("Created missing reference for key %s.\n", refKey)
+			}
+		}
+	}
+}
+
+func handleExpiration(refKey string) {
+	parts := strings.SplitN(refKey, ":", 3)
+	if len(parts) < 3 {
+		fmt.Println("Invalid reference key format:", refKey)
+		return
+	}
+
+	scheduleType := parts[1]
+	uniqueKey := parts[2]
+
+	fullKey := fmt.Sprintf("rsch:%s:%s", scheduleType, uniqueKey)
+
+	val, err := rdb.Get(ctx, fullKey).Result()
+	if err != nil {
+		fmt.Printf("Failed to retrieve unique key data for key %s: %v\n", fullKey, err)
 		return
 	}
 
 	var reqData RequestData
 	if err := json.Unmarshal([]byte(val), &reqData); err != nil {
-		fmt.Println("Failed to unmarshal unique key data:", err)
+		fmt.Println("Failed to unmarshal unique key data for key", fullKey, ":", err)
 		return
 	}
 
@@ -78,10 +119,9 @@ func handleExpiration(refKey string) {
 	retryTime, _ := strconv.Atoi(os.Getenv("RETRY_TIME"))
 
 	if maxRetries != -1 && reqData.Retry >= maxRetries {
-		message := fmt.Sprintf("Max retries reached for key %s, deleting unique key.", uniqueKey)
-		fmt.Println(message)
+		fmt.Printf("Max retries reached for key %s, deleting unique key.\n", fullKey)
 
-		rdb.Del(ctx, uniqueKey)
+		rdb.Del(ctx, fullKey)
 		return
 	}
 
@@ -106,7 +146,7 @@ func handleExpiration(refKey string) {
 
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		fmt.Printf("Webhook post failed (attempt %d/%d), retrying in %d seconds.\n", reqData.Retry+1, maxRetries, retryTime)
+		fmt.Printf("Webhook post failed (%d/%d), retrying in %d seconds.\n", reqData.Retry+1, maxRetries, retryTime)
 		reqData.Retry++
 
 		value, err := json.Marshal(reqData)
@@ -115,7 +155,7 @@ func handleExpiration(refKey string) {
 			return
 		}
 
-		err = rdb.Set(ctx, uniqueKey, value, 0).Err()
+		err = rdb.Set(ctx, fullKey, value, 0).Err()
 		if err != nil {
 			fmt.Println("Failed to update unique key in Redis:", err)
 			return
@@ -127,7 +167,7 @@ func handleExpiration(refKey string) {
 			return
 		}
 	} else {
-		fmt.Printf("Webhook post successful for key %s, deleting unique key.\n", uniqueKey)
-		rdb.Del(ctx, uniqueKey)
+		fmt.Printf("Webhook post successful for key %s, deleting unique key.\n", fullKey)
+		rdb.Del(ctx, fullKey)
 	}
 }

@@ -79,6 +79,20 @@ const key = await scheduler.schedule({
 console.log('Scheduled key:', key);
 ```
 
+## Custom Types
+
+You can also group your data into custom types for better organization. Here's an example:
+
+```typescript
+const key = await scheduler.schedule({
+    webhook: 'https://example.com/webhook',
+    ttl: 60,
+    data: { message: 'Hello, World!' }
+}, 'custom-type');
+
+console.log('Scheduled key:', key);
+```
+
 ### Retrieving a Scheduled Task
 
 ```typescript
@@ -86,12 +100,25 @@ const schedule = await scheduler.getSchedule(key);
 console.log('Scheduled task:', schedule);
 ```
 
+### Retrieving All Scheduled Tasks
+
+```typescript
+const schedules = await scheduler.getAllSchedules();
+console.log('All scheduled tasks:', schedules);
+```
+
+Or you can filter tasks by type:
+
+```typescript
+const schedules = await scheduler.getAllSchedules('custom-type');
+console.log('Filtered scheduled tasks:', schedules);
+```
+
 ### Updating a Scheduled Task
 
 ```typescript
 const success = await scheduler.updateSchedule(key, {
-    webhook: 'https://example.com/updated-webhook',
-    ttl: 120,
+    ttl: 120, // this is 120 seconds from now
     data: { message: 'Updated message' }
 });
 console.log('Update successful:', success);

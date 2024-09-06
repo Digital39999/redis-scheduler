@@ -185,6 +185,14 @@ curl -X POST http://localhost:8080/schedule \
 - **`ttl`**: Time-to-live in seconds after which the webhook will be triggered.
 - **`data`**: Any JSON data you want to send to the webhook.
 
+### Custom Type
+
+If you want to group tasks by a custom type, you can specify the `type` query parameter:
+
+```bash
+curl -X POST http://localhost:8080/schedule?type=custom-type
+```
+
 ### Get All Active Tasks
 
 To retrieve a list of active tasks, send a GET request to `/schedules`:
@@ -192,6 +200,12 @@ To retrieve a list of active tasks, send a GET request to `/schedules`:
 ```bash
 curl -X GET http://localhost:8080/schedules \
 -H "Authorization: your-api-auth-token"
+```
+
+You can also filter tasks by type:
+
+```bash
+curl -X GET http://localhost:8080/schedules?type=custom
 ```
 
 ### Get Task Details
@@ -314,9 +328,7 @@ def schedule_task():
     data = {
         'webhook': 'https://example.com/webhook',
         'ttl': 120,  # 2 minutes
-        'data
-
-': {
+        'data': {
             'message': 'Hello from Python!'
         }
     }

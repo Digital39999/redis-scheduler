@@ -10,13 +10,13 @@ export type ResponseType<T> = {
 
 export type RequestData<T = unknown> = {
 	webhook: string;
-	retry?: number;
 	ttl: number;
 	data: T;
 }
 
 export type ConstructorOptions = {
 	enableWebServerOnPort?: number;
+	dontCheckInstanceUrl?: boolean;
 	authorization: string;
 	instanceUrl: string;
 }

@@ -11,10 +11,10 @@ func initializeRoutes(router *gin.Engine) {
 	router.GET("/", infoHandler)
 	router.GET("/stats", statsHandler)
 
-	router.GET("/schedules", schedulesHandler)
-	router.DELETE("/schedules", purgeHandler)
+	router.GET("/schedules", allSchedulesHandler)
+	router.DELETE("/schedules", deleteAllSchedules)
 
-	router.POST("/schedule", scheduleHandler)
+	router.POST("/schedule", createScheduleHandler)
 	router.GET("/schedule/:key", getScheduleHandler)
 	router.PATCH("/schedule/:key", patchScheduleHandler)
 	router.DELETE("/schedule/:key", deleteScheduleHandler)
