@@ -54,7 +54,6 @@ export default class RedisScheduler extends EventEmitter {
 		const response = await axios.get(url).then((res) => res.data).catch((err: AxiosError) => err.response?.data);
 		if (response?.status !== 200) throw new Error('Invalid instance URL.');
 		else if ('error' in response) throw new Error(response.error);
-		else throw new Error('Invalid instance URL.');
 	}
 
 	private async parseAxiosRequest<T>(response: Promise<AxiosResponse<ResponseType<T>>>): Promise<T> {
