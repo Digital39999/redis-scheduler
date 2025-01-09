@@ -59,9 +59,9 @@ export default class RedisScheduler extends EventEmitter {
 	private async parseAxiosRequest<T>(response: Promise<AxiosResponse<ResponseType<T>>>): Promise<T> {
 		const data = await response.then((res) => res.data).catch((err: AxiosError<ResponseType<T>>) => err.response?.data);
 
-		if (!data) throw new Error('Request failed.');
+		if (!data) throw new Error('Request failed (#1).');
 		else if ('error' in data) throw new Error(data.error);
-		else if (data.status !== 200) throw new Error('Request failed.');
+		else if (data.status !== 200) throw new Error('Request failed (#2).');
 
 		return data.data;
 	}
