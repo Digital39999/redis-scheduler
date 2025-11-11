@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm (OIDC)
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
 
 env:
   publish: false
@@ -17,13 +21,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: 'https://registry.npmjs.org/'
+          registry-url: 'https://registry.npmjs.org'
+          always-auth: true   # ensures npm always uses OIDC auth
+
+      - name: Ensure latest npm
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: |
@@ -54,10 +62,8 @@ jobs:
           cd packages/nodejs
           npm run build # Change this if you have a different build command
 
-      - name: Publish to npm
+      - name: Publish to npm using OIDC
         if: env.publish == 'true'
         run: |
           cd packages/nodejs
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm publish --provenance
